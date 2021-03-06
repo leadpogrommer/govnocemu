@@ -9,7 +9,7 @@ int main() {
 
     cpu->pc = 0xF000;
 
-    for(int i = 0; i < 1000; i++){
+    for(int i = 0; i < 100; i++){
         tick(cpu);
     }
 

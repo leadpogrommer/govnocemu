@@ -1,6 +1,36 @@
 #include "cpu.h"
 
-#include "cpu.h"
+
+#ifdef DEBUG_PRINT
+const char *__debug_addr;
+const char *__debug_instr;
+#define SET_ADDR_NAME (__debug_addr = __func__+2)
+#define SET_INSTR_NAME (__debug_instr = __func__+2)
+#define DEBUG_LOG printf("%s %s\nN=%d V=%d D=%d I=%d Z=%d C=%d pc=%#04x\n",  __debug_instr, __debug_addr, GET_FLAG(FLAG_N), GET_FLAG(FLAG_V), GET_FLAG(FLAG_D), GET_FLAG(FLAG_I), GET_FLAG(FLAG_Z), GET_FLAG(FLAG_C), cpu->pc);
+#else
+#define SET_ADDR_NAME
+#define SET_INSTR_NAME
+#define DEBUG_LOG
+#endif
+
+
+#define ADDR_MODE(name, size) uint16_t (name)(cpu_t* cpu) { cpu->pc_delta = (size); SET_ADDR_NAME;
+#define INSTRUCTION(name) void (name)(cpu_t* cpu, uint16_t operand) { SET_INSTR_NAME;
+
+#define FLAG_N 0b10000000
+#define FLAG_V 0b01000000
+#define FLAG_D 0b00001000
+#define FLAG_I 0b00000100
+#define FLAG_Z 0b00000010
+#define FLAG_C 0b00000001
+
+#define GET_FLAG(flag) ((cpu->ps & (flag)) != 0)
+#define SET_FLAG(flag) (cpu->ps |= (flag))
+#define CLEAR_FLAG(flag) (cpu->ps &= (~(flag)))
+
+
+
+
 
 ADDR_MODE(a_immediate, 2)
     return cpu->pc + 1;
@@ -56,36 +86,36 @@ ADDR_MODE(a_relative, 2)
 
 // TODO: !ldx, !stx, !inx, !lda, !clc, !adc, !sta, !bcc, !jmp
 
-INSTRUCTION(i_ldx) {
+INSTRUCTION(i_ldx)
     cpu->x = mem_get(cpu->mem, operand);
     if(cpu->x == 0)SET_FLAG(FLAG_Z);
     if(((int8_t)cpu->x) < 0)SET_FLAG(FLAG_N);
     else CLEAR_FLAG(FLAG_N);
 }
 
-INSTRUCTION(i_stx) {
+INSTRUCTION(i_stx)
     mem_set(cpu->mem, operand, cpu->x);
 }
 
-INSTRUCTION(i_inx) {
+INSTRUCTION(i_inx)
     cpu->x += 1;
     if (cpu->x == 0) SET_FLAG(FLAG_Z);
     if (((int8_t)cpu->x) < 0) SET_FLAG(FLAG_N);
     else CLEAR_FLAG(FLAG_N);
 }
 
-INSTRUCTION(i_lda) {
+INSTRUCTION(i_lda)
     cpu->a = mem_get(cpu->mem, operand);
     if (cpu->a == 0) SET_FLAG(FLAG_Z);
     if (((int8_t)cpu->a) < 0) SET_FLAG(FLAG_N);
     else CLEAR_FLAG(FLAG_N);
 }
 
-INSTRUCTION(i_clc) {
+INSTRUCTION(i_clc)
     CLEAR_FLAG(FLAG_C);
 }
 
-INSTRUCTION(i_adc) {
+INSTRUCTION(i_adc)
     // TODO: make asm implementation
     // TODO: overflow flag
     uint16_t sum = cpu->a + mem_get(cpu->mem, operand) + GET_FLAG(FLAG_C);
@@ -102,18 +132,18 @@ INSTRUCTION(i_adc) {
     else CLEAR_FLAG(FLAG_N);
 }
 
-INSTRUCTION(i_sta) {
+INSTRUCTION(i_sta)
     mem_set(cpu->mem, operand, cpu->a);
 }
 
-INSTRUCTION(i_bcc) {
+INSTRUCTION(i_bcc)
     if (!GET_FLAG(FLAG_C)){
         cpu->was_branch = 1;
         cpu->pc = operand;
     }
 }
 
-INSTRUCTION(i_jmp) {
+INSTRUCTION(i_jmp)
     cpu->was_branch = 1;
     cpu->pc = operand;
 }
@@ -184,4 +214,5 @@ void tick(cpu_t* cpu){
     if(!cpu->was_branch){
         cpu->pc += cpu->pc_delta;
     }
+    DEBUG_LOG;
 }

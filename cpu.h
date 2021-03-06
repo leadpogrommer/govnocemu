@@ -1,21 +1,10 @@
 #pragma once
 
-#include "stdint.h"
+#include <stdint.h>
+#include <stdio.h>
 #include "memory.h"
 
-#define ADDR_MODE(name, size) uint16_t (name)(cpu_t* cpu) { cpu->pc_delta = (size);
-#define INSTRUCTION(name) void (name)(cpu_t* cpu, uint16_t operand)
 
-#define FLAG_N 0b10000000
-#define FLAG_V 0b01000000
-#define FLAG_D 0b00001000
-#define FLAG_I 0b00000100
-#define FLAG_Z 0b00000010
-#define FLAG_C 0b00000001
-
-#define GET_FLAG(flag) ((cpu->ps & (flag)) != 0)
-#define SET_FLAG(flag) (cpu->ps |= (flag))
-#define CLEAR_FLAG(flag) (cpu->ps &= (~(flag)))
 
 typedef struct _cpu_t cpu_t;
 
